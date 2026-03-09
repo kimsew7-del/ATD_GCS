@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ATD_GCS</title>
+    <link rel="stylesheet" href="./styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <p class="eyebrow">Auto-Tracking-Drone v2 / Ground Control Station</p>
+          <div class="console-title-row">
+            <h1>ATD_GCS</h1>
+            <span class="console-badge">OPERATOR CONSOLE</span>
+          </div>
+          <p class="brand-copy">Vehicle control, tracking supervision, health monitoring, and recovery management.</p>
+        </div>
+        <div class="status-strip">
+          <div class="pill" id="connection-pill">MOCK LINK</div>
+          <div class="pill" id="mode-pill">MANUAL</div>
+          <div class="pill" id="failsafe-pill">NO FAILSAFE</div>
+        </div>
+      </header>
+
+      <section class="transport-banner" id="transport-banner">
+        <strong id="transport-phase">connecting</strong>
+        <span id="transport-detail">Waiting for transport</span>
+        <code id="transport-mode">mock</code>
+      </section>
+
+      <nav class="view-tabs">
+        <button class="tab is-active" data-view="fly">Fly</button>
+        <button class="tab" data-view="plan">Plan</button>
+        <button class="tab" data-view="setup">Setup</button>
+        <button class="tab" data-view="analyze">Analyze</button>
+      </nav>
+
+      <main class="dashboard">
+        <section class="view is-active fly-layout" data-view-panel="fly">
+          <section class="alert-strip">
+            <article class="alert-card">
+              <p class="eyebrow">Vehicle Messages</p>
+              <div id="vehicle-messages" class="message-list"></div>
+            </article>
+            <article class="alert-card compact">
+              <p class="eyebrow">Link Watch</p>
+              <div id="link-watch" class="watch-grid"></div>
+            </article>
+          </section>
+
+          <section class="ops-strip">
+            <div class="priority-banner" id="priority-banner">
+              <span class="priority-label">Priority</span>
+              <strong id="priority-text">System nominal</strong>
+            </div>
+            <div class="ops-statbar">
+              <div class="ops-chip">
+                <span>Controller</span>
+                <strong id="hero-controller">manual</strong>
+              </div>
+              <div class="ops-chip">
+                <span>Requested</span>
+                <strong id="hero-requested">manual</strong>
+              </div>
+              <div class="ops-chip">
+                <span>Target</span>
+                <strong id="hero-target">lost</strong>
+              </div>
+              <div class="ops-chip">
+                <span>Frame Age</span>
+                <strong id="hero-frame-age">0.0 ms</strong>
+              </div>
+              <div class="ops-chip">
+                <span>Output</span>
+                <strong id="hero-output">elrs / ok</strong>
+              </div>
+              <div class="ops-chip">
+                <span>Battery</span>
+                <strong id="hero-battery">N/A</strong>
+              </div>
+              <div class="ops-chip">
+                <span>Airframe</span>
+                <strong id="hero-airframe">N/A</strong>
+              </div>
+            </div>
+          </section>
+
+          <section class="ops-workspace">
+            <article class="panel map-panel workspace-map">
+              <div class="panel-head">
+                <p class="eyebrow">Tactical Map</p>
+                <span class="mini-pill">Primary Workspace</span>
+              </div>
+              <div class="map-stage">
+                <div id="map-canvas" class="map-canvas"></div>
+                <div class="map-actions">
+                  <button class="cmd-button ghost" id="map-focus-target">Focus Target</button>
+                  <button class="cmd-button ghost" id="map-rth">RTH View</button>
+                </div>
+                <div class="map-overlay top-left">
+                  <span>ALT <strong id="overlay-altitude">N/A</strong></span>
+                  <span>BATT <strong id="overlay-battery">N/A</strong></span>
+                  <span>MAP <strong id="overlay-map-source">FALLBACK</strong></span>
+                </div>
+                <div class="map-overlay bottom-right">
+                  <span>TRACK <strong id="overlay-track">LOST</strong></span>
+                  <span>MODE <strong id="overlay-mode">MANUAL</strong></span>
+                </div>
+                <div class="map-overlay center-status" id="overlay-center-status">
+                  <span id="center-status-label">Awaiting target</span>
+                </div>
+                <div class="map-legend">
+                  <span><i class="legend-dot vehicle"></i>Vehicle</span>
+                  <span><i class="legend-dot home"></i>Home</span>
+                  <span><i class="legend-dot target"></i>Target</span>
+                </div>
+              </div>
+            </article>
+
+            <aside class="ops-sidebar">
+              <article class="panel status-panel">
+                <div class="panel-head">
+                  <p class="eyebrow">Status Management</p>
+                  <span class="mini-pill">Flight / Tracker</span>
+                </div>
+                <div class="status-summary-grid">
+                  <div class="status-card">
+                    <span>Controller</span>
+                    <strong id="instrument-controller">manual</strong>
+                  </div>
+                  <div class="status-card">
+                    <span>Continuity</span>
+                    <strong id="hero-continuity">0.00</strong>
+                  </div>
+                  <div class="status-card">
+                    <span>Roll</span>
+                    <strong id="instrument-roll">0.0 deg</strong>
+                  </div>
+                  <div class="status-card">
+                    <span>Pitch</span>
+                    <strong id="instrument-pitch">0.0 deg</strong>
+                  </div>
+                  <div class="status-card">
+                    <span>Yaw Rate</span>
+                    <strong id="instrument-yaw">0.0 dps</strong>
+                  </div>
+                  <div class="status-card">
+                    <span>Guidance</span>
+                    <strong id="instrument-source">manual</strong>
+                  </div>
+                  <div class="status-card critical">
+                    <span>Failsafe</span>
+                    <strong id="instrument-failsafe">none</strong>
+                  </div>
+                  <div class="status-card">
+                    <span>Strike Completion</span>
+                    <strong id="instrument-strike">none</strong>
+                  </div>
+                  <div class="status-card">
+                    <span>Target State</span>
+                    <strong id="status-target-state">searching</strong>
+                  </div>
+                </div>
+              </article>
+
+              <article class="panel command-panel">
+                <div class="panel-head">
+                  <p class="eyebrow">Command Management</p>
+                  <span class="mini-pill">Action Console</span>
+                </div>
+                <div class="command-precheck">
+                  <div class="status-card">
+                    <span>Arm State</span>
+                    <strong id="command-arm-state">disarmed</strong>
+                  </div>
+                  <div class="status-card">
+                    <span>Command Gate</span>
+                    <strong id="command-gate">ready</strong>
+                  </div>
+                </div>
+                <div class="command-blockers" id="command-blockers"></div>
+                <div class="command-checklist" id="command-checklist"></div>
+                <div class="command-section">
+                  <span class="command-heading">Vehicle</span>
+                  <div class="command-grid tight-grid">
+                    <button class="cmd-button neutral" data-command="arm">Arm</button>
+                    <button class="cmd-button neutral" data-command="disarm">Disarm</button>
+                  </div>
+                </div>
+                <div class="command-section">
+                  <span class="command-heading">Tracking</span>
+                  <div class="command-grid">
+                    <button class="cmd-button primary" data-command="start_tracking">Start Tracking</button>
+                    <button class="cmd-button muted" data-command="stop_tracking">Stop Tracking</button>
+                    <button class="cmd-button warn" data-command="set_requested_mode" data-mode="track_dive">
+                      Switch to Dive
+                    </button>
+                    <button class="cmd-button accent" data-command="set_requested_mode" data-mode="strike">
+                      Switch to Strike
+                    </button>
+                    <button class="cmd-button neutral" data-command="set_requested_mode" data-mode="track_cruise">
+                      Switch to Cruise
+                    </button>
+                  </div>
+                </div>
+                <div class="command-section">
+                  <span class="command-heading">Recovery</span>
+                  <div class="command-grid tight-grid">
+                    <button class="cmd-button danger" data-command="reset_failsafe_latch">Reset Failsafe</button>
+                    <button class="cmd-button ghost" data-command="toggle_mock">Advance Mock</button>
+                  </div>
+                </div>
+                <pre id="command-result">Awaiting command...</pre>
+              </article>
+            </aside>
+          </section>
+
+          <section class="fly-dock panel">
+            <div class="panel-head dock-head">
+              <p class="eyebrow">Secondary Workspace</p>
+              <span class="mini-pill">Context / Logs / Video</span>
+            </div>
+            <nav class="dock-tabs">
+              <button class="dock-tab is-active" data-dock="video">Video</button>
+              <button class="dock-tab" data-dock="vehicle">Vehicle</button>
+              <button class="dock-tab" data-dock="tracker">Tracker</button>
+              <button class="dock-tab" data-dock="health">Health</button>
+              <button class="dock-tab" data-dock="events">Events</button>
+            </nav>
+
+            <article class="dock-panel is-active video-dock-panel" data-dock-panel="video">
+              <div class="video-dock-layout">
+                <div class="video-stage" id="video-stage">
+                  <video id="video-feed" class="video-feed" autoplay muted playsinline></video>
+                  <div class="video-noise"></div>
+                  <div class="video-horizon"></div>
+                  <div class="video-vignette"></div>
+                  <div class="tracking-box" id="tracking-box"></div>
+                  <div class="tracking-crosshair"></div>
+                  <div class="video-hud hud-top-left">
+                    <span>MODE <strong id="video-mode">MANUAL</strong></span>
+                    <span>CONF <strong id="video-confidence">0.00</strong></span>
+                  </div>
+                  <div class="video-hud hud-top-right">
+                    <span>FRAME <strong id="video-frame-age">0.0 ms</strong></span>
+                    <span>LINK <strong id="video-link">GOOD</strong></span>
+                  </div>
+                  <div class="video-hud hud-bottom-left">
+                    <span>TRACK <strong id="video-track-state">SEARCHING</strong></span>
+                  </div>
+                  <div class="video-hud hud-bottom-right">
+                    <span>X <strong id="video-target-x">0.00</strong></span>
+                    <span>Y <strong id="video-target-y">0.00</strong></span>
+                    <span>ID <strong id="video-target-id">N/A</strong></span>
+                  </div>
+                </div>
+                <div class="video-controls">
+                  <input id="video-url" class="video-url" type="text" placeholder="HLS or MP4 URL" />
+                  <button class="cmd-button neutral" id="video-load">Load Stream</button>
+                </div>
+              </div>
+            </article>
+
+            <article class="dock-panel" data-dock-panel="vehicle">
+              <div class="panel-head">
+                <p class="eyebrow">Vehicle</p>
+                <span id="vehicle-link" class="mini-pill">LINK</span>
+              </div>
+              <div class="kv-grid" id="vehicle-panel"></div>
+            </article>
+
+            <article class="dock-panel" data-dock-panel="tracker">
+              <div class="panel-head">
+                <p class="eyebrow">Tracker</p>
+                <span id="tracker-target" class="mini-pill">TARGET</span>
+              </div>
+              <div class="kv-grid" id="tracker-panel"></div>
+            </article>
+
+            <article class="dock-panel" data-dock-panel="health">
+              <div class="panel-head">
+                <p class="eyebrow">Health</p>
+                <span id="health-summary" class="mini-pill">HEALTH</span>
+              </div>
+              <div class="kv-grid" id="health-panel"></div>
+            </article>
+
+            <article class="dock-panel event-panel" data-dock-panel="events">
+              <div class="panel-head">
+                <p class="eyebrow">Events</p>
+                <span class="mini-pill">/ws/events</span>
+              </div>
+              <div id="event-list" class="event-list"></div>
+            </article>
+          </section>
+        </section>
+
+        <section class="view" data-view-panel="plan">
+          <article class="panel placeholder-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Plan View</p>
+              <span class="mini-pill">QGC Baseline</span>
+            </div>
+            <h2>Mission / Geofence Placeholder</h2>
+            <p>Route planning, home position, geofence, and mission sync will land here.</p>
+          </article>
+        </section>
+
+        <section class="view" data-view-panel="setup">
+          <article class="panel placeholder-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Setup View</p>
+              <span class="mini-pill">Read Only</span>
+            </div>
+            <h2>Vehicle Setup Summary</h2>
+            <p>Link health, capability summary, failsafe readiness, and ATD support flags belong here.</p>
+          </article>
+        </section>
+
+        <section class="view" data-view-panel="analyze">
+          <article class="panel placeholder-panel">
+            <div class="panel-head">
+              <p class="eyebrow">Analyze View</p>
+              <span class="mini-pill">Session Logs</span>
+            </div>
+            <h2>Telemetry Review</h2>
+            <div class="analyze-grid">
+              <section class="analyze-block">
+                <p class="eyebrow">Session Summary</p>
+                <div id="analyze-summary" class="kv-grid"></div>
+              </section>
+              <section class="analyze-block">
+                <p class="eyebrow">Recent Commands</p>
+                <div id="command-history" class="event-list"></div>
+              </section>
+              <section class="analyze-block wide">
+                <p class="eyebrow">Event Timeline</p>
+                <div id="event-timeline" class="timeline"></div>
+              </section>
+            </div>
+          </article>
+        </section>
+      </main>
+    </div>
+
+    <div class="confirm-modal" id="confirm-modal" hidden>
+      <div class="confirm-card">
+        <p class="eyebrow">Command Confirmation</p>
+        <h2 id="confirm-title">Confirm action</h2>
+        <p id="confirm-body">This action affects vehicle state.</p>
+        <label class="confirm-check">
+          <input type="checkbox" id="confirm-checkbox" />
+          <span id="confirm-check-label">I have reviewed the current vehicle state.</span>
+        </label>
+        <div class="confirm-actions">
+          <button class="cmd-button ghost" id="confirm-cancel">Cancel</button>
+          <button class="cmd-button danger" id="confirm-accept" disabled>Confirm</button>
+        </div>
+      </div>
+    </div>
+
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+      crossorigin=""
+    ></script>
+    <script src="https://cdn.jsdelivr.net/npm/hls.js@1"></script>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
